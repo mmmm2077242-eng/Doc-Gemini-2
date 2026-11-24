@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0f766e" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
+  <link rel="apple-touch-icon" href="./icon-192.png" />
+  <title>دفتر الحالات | توثيق حالات الكلية</title>
+  <style>
+    :root {
+      --primary: #0f766e;
+      --primary-dark: #115e59;
+      --primary-light: #ccfbf1;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --success: #16a34a;
+      --warning: #d97706;
+      --info: #2563eb;
+      --danger: #dc2626;
+    }
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, "Segoe UI", Tahoma, sans-serif; }
+    body { margin: 0; background: var(--bg); color: var(--text); padding-bottom: 50px; }
+    header {
+      background: var(--primary);
+      color: #fff;
+      padding: 14px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    header h1 { margin: 0; font-size: 1.15rem; display: flex; align-items: center; gap: 8px; }
+    .container { max-width: 1020px; margin: 18px auto; padding: 0 14px; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+    .tab-btn {
+      flex: 1;
+      min-width: 110px;
+      padding: 11px 14px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.92rem;
+      color: var(--text);
+      transition: 0.2s;
+    }
+    .tab-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+    label { display: block; font-size: 0.86rem; font-weight: 700; margin-bottom: 5px; color: var(--text); }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      background: #fff;
+    }
+    input:focus, select:focus, textarea:focus { outline: 2px solid var(--primary-light); border-color: var(--primary); }
+    textarea { min-height: 75px; resize: vertical; }
+    .btn {
+      padding: 9px 14px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.88rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-outline { background: #fff; border: 1px solid var(--border); color: var(--text); }
+    .btn-header { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: #fff; }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .progress-bar {
+      width: 100%;
+      height: 10px;
+      background: #e2e8f0;
+      border-radius: 99px;
+      overflow: hidden;
+      margin: 8px 0;
+    }
+    .progress-fill { height: 100%; background: var(--primary); transition: width 0.3s; }
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 99px;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+    .status-progress { background: #fef3c7; color: var(--warning); }
+    .status-completed { background: #dbeafe; color: var(--info); }
+    .status-signed { background: #dcfce7; color: var(--success); }
+
+    /* Interactive Dental Chart (FDI) */
+    .chart-box {
+      background: #f1f5f9;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      margin-top: 8px;
+      overflow-x: auto;
+    }
+    .arch-row {
+      display: flex;
+      justify-content: center;
+      gap: 4px;
+      margin: 6px 0;
+      min-width: 520px;
+    }
+    .quadrant-divider {
+      width: 2px;
+      background: #94a3b8;
+      margin: 0 4px;
+    }
+    .tooth-btn {
+      width: 30px;
+      height: 36px;
+      border: 1px solid #cbd5e1;
+      background: #fff;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      color: var(--text);
+      padding: 0;
+      transition: 0.15s;
+    }
+    .tooth-btn:hover { border-color: var(--primary); }
+    .tooth-btn.selected {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary-dark);
+      transform: scale(1.06);
+    }
+
+    .img-preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(115px, 1fr)); gap: 8px; margin-top: 10px; }
+    .img-box { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; text-align: center; font-size: 0.75rem; background: #f1f5f9; }
+    .img-box img { width: 100%; height: 95px; object-fit: cover; display: block; cursor: zoom-in; }
+    .hidden { display: none; }
+
+    /* Modal for Full Image View */
+    .modal {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+      display: none; align-items: center; justify-content: center; z-index: 100; padding: 16px;
+    }
+    .modal.open { display: flex; }
+    .modal img { max-width: 100%; max-height: 90vh; border-radius: 8px; }
+
+    @media print {
+      header, .tabs, .no-print { display: none !important; }
+      body { background: #fff; }
+      .card { border: 1px solid #ccc; box-shadow: none; break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>
+    <img src="./icon-192.png" alt="Logo" style="width:28px; height:28px; border-radius:6px;" />
+    دفتر الحالات — الكلية
+  </h1>
+  <div class="no-print" style="display:flex; gap:6px; flex-wrap:wrap;">
+    <button id="install-btn" class="btn btn-header hidden" onclick="installApp()">📲 تثبيت التطبيق</button>
+    <button class="btn btn-header" onclick="exportBackup()">⬇️ نسخة احتياطية</button>
+    <label class="btn btn-header" style="margin:0; cursor:pointer;">
+      ⬆️ استعادة
+      <input type="file" accept=".json" onchange="importBackup(event)" hidden />
+    </label>
+  </div>
+</header>
+
+<div class="container">
+  <div class="tabs no-print">
+    <button class="tab-btn active" onclick="switchTab('dashboard', this)">📊 المتطلبات</button>
+    <button class="tab-btn" onclick="switchTab('add-case', this)">➕ إضافة حالة</button>
+    <button class="tab-btn" onclick="switchTab('cases-list', this)">📁 الحالات (<span id="total-count">0</span>)</button>
+  </div>
+
+  <!-- 1. عداد المتطلبات الأكاديمية -->
+  <section id="tab-dashboard">
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
+        <h2 style="margin:0; font-size:1.08rem;">تقدم متطلبات الأقسام (Requirements Tracker)</h2>
+        <button class="btn btn-outline no-print" onclick="toggleReqEditor()">⚙️ تعديل الأعداد المطلوبة</button>
+      </div>
+
+      <div id="req-editor" class="card hidden" style="background:#f1f5f9;">
+        <p style="margin-top:0; font-size:0.88rem; color:var(--muted);">حدد العدد المطلوب منك لكل قسم في الكلية:</p>
+        <div class="grid-3" id="req-inputs"></div>
+        <button class="btn btn-primary" style="margin-top:12px;" onclick="saveRequirements()">حفظ المتطلبات</button>
+      </div>
+
+      <div class="grid-3" id="req-cards"></div>
+    </div>
+  </section>
+
+  <!-- 2. نموذج إضافة حالة -->
+  <section id="tab-add-case" class="hidden">
+    <div class="card">
+      <h2 id="form-title" style="margin-top:0; font-size:1.08rem;">تسجيل حالة جديدة</h2>
+      <form id="case-form" onsubmit="saveCase(event)">
+        <input type="hidden" id="case-id" />
+        <div class="grid-2">
+          <div>
+            <label>القسم (Department) *</label>
+            <select id="department" required>
+              <option value="Operative">Operative</option>
+              <option value="Endodontics">Endodontics</option>
+              <option value="Oral Surgery">Oral Surgery</option>
+              <option value="Prosthodontics">Prosthodontics</option>
+              <option value="Periodontics">Periodontics</option>
+              <option value="Pedodontics">Pedodontics</option>
+            </select>
+          </div>
+          <div>
+            <label>كود المريض / الاسم المختصر *</label>
+            <input type="text" id="patientCode" placeholder="مثال: PT-104 أو أحمد م." required />
+          </div>
+          <div>
+            <label>حالة التوثيق والتسليم *</label>
+            <select id="status">
+              <option value="progress">قيد التنفيذ (In Progress)</option>
+              <option value="completed">مكتملة (Completed)</option>
+              <option value="signed">معتمدة / موقّعة (Signed Off)</option>
+            </select>
+          </div>
+          <div>
+            <label>التاريخ</label>
+            <input type="date" id="caseDate" />
+          </div>
+          <div>
+            <label>اسم المشرف (Supervisor)</label>
+            <input type="text" id="supervisor" placeholder="د. ..." />
+          </div>
+          <div>
+            <label>رقم السنة (FDI) — اختر من المخطط أو اكتب *</label>
+            <input type="text" id="toothNumber" placeholder="مثال: #36" required />
+          </div>
+        </div>
+
+        <!-- مخطط الأسنان التفاعلي -->
+        <div style="margin-top:12px;">
+          <label>مخطط الأسنان السريع (اضغط لتحديد أو إلغاء تحديد السنة):</label>
+          <div class="chart-box" dir="ltr">
+            <div style="text-align:center; font-size:0.75rem; color:var(--muted); margin-bottom:4px;">Upper Arch (Right 18-11 | Left 21-28)</div>
+            <div class="arch-row" id="upper-arch"></div>
+            <hr style="border:0; border-top:1px dashed #cbd5e1; margin:6px 0;" />
+            <div class="arch-row" id="lower-arch"></div>
+            <div style="text-align:center; font-size:0.75rem; color:var(--muted); margin-top:4px;">Lower Arch (Right 48-41 | Left 31-38)</div>
+          </div>
+        </div>
+
+        <div style="margin-top:12px;">
+          <label>الشكوى الرئيسية والتشخيص (Chief Complaint & Diagnosis) *</label>
+          <textarea id="diagnosis" placeholder="مثال: Symptomatic irreversible pulpitis with normal apical tissues..." required></textarea>
+        </div>
+
+        <div style="margin-top:12px;">
+          <label>خطوات العمل والمواد المستخدمة (Procedure & Materials)</label>
+          <textarea id="procedure" placeholder="مثال: Rubber dam isolation, Access cavity, WL 21mm, Protaper Next up to X2, NaOCl 2.5%, Single cone obturation..."></textarea>
+        </div>
+
+        <div style="margin-top:12px;">
+          <label>ملاحظات للمناقشة (Viva Notes / Follow-up)</label>
+          <textarea id="notes" placeholder="أي نقاط مهمة لو المشرف سألك في الحالة..."></textarea>
+        </div>
+
+        <div class="card" style="background:#f8fafc; margin-top:14px;">
+          <label>إرفاق صور الحالة والأشعة (تُضغط تلقائياً لتوفير مساحة الهاتف)</label>
+          <div class="grid-2" style="margin-top:8px;">
+            <div>
+              <label>مرحلة الصورة</label>
+              <select id="img-stage">
+                <option value="Pre-op">Pre-op (قبل العلاج)</option>
+                <option value="Intra-op">Intra-op (أثناء العمل)</option>
+                <option value="Post-op">Post-op (بعد العلاج)</option>
+                <option value="Radiograph">Radiograph (أشعة)</option>
+              </select>
+            </div>
+            <div>
+              <label>اختيار صورة من الاستوديو أو الكاميرا</label>
+              <input type="file" accept="image/*" onchange="handleImageUpload(event)" />
+            </div>
+          </div>
+          <div class="img-preview-grid" id="form-images-preview"></div>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:16px;">
+          <button type="submit" class="btn btn-primary">💾 حفظ الحالة</button>
+          <button type="button" class="btn btn-outline" onclick="resetForm()">تفريغ الحقول</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- 3. سجل الحالات -->
+  <section id="tab-cases-list" class="hidden">
+    <div class="card no-print">
+      <div class="grid-3">
+        <input type="text" id="search-input" placeholder="🔍 بحث بالكود، السنة، أو التشخيص..." oninput="renderCases()" />
+        <select id="filter-dept" onchange="renderCases()">
+          <option value="ALL">كل الأقسام</option>
+          <option value="Operative">Operative</option>
+          <option value="Endodontics">Endodontics</option>
+          <option value="Oral Surgery">Oral Surgery</option>
+          <option value="Prosthodontics">Prosthodontics</option>
+          <option value="Periodontics">Periodontics</option>
+          <option value="Pedodontics">Pedodontics</option>
+        </select>
+        <select id="filter-status" onchange="renderCases()">
+          <option value="ALL">كل الحالات</option>
+          <option value="progress">قيد التنفيذ</option>
+          <option value="completed">مكتملة</option>
+          <option value="signed">معتمدة (Signed Off)</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="cases-container"></div>
+  </section>
+</div>
+
+<!-- عارض الصور بالحجم الكامل -->
+<div id="img-modal" class="modal" onclick="this.classList.remove('open')">
+  <img id="modal-img" src="" alt="Preview" />
+</div>
+
+<script>
+  const DEPARTMENTS = ["Operative", "Endodontics", "Oral Surgery", "Prosthodontics", "Periodontics", "Pedodontics"];
+  const UPPER_RIGHT = [18,17,16,15,14,13,12,11];
+  const UPPER_LEFT  = [21,22,23,24,25,26,27,28];
+  const LOWER_RIGHT = [48,47,46,45,44,43,42,41];
+  const LOWER_LEFT  = [31,32,33,34,35,36,37,38];
+
+  let cases = JSON.parse(localStorage.getItem("dental_cases_v2") || "[]");
+  let requirements = JSON.parse(localStorage.getItem("dental_reqs_v2") || JSON.stringify({
+    "Operative": 10,
+    "Endodontics": 4,
+    "Oral Surgery": 8,
+    "Prosthodontics": 3,
+    "Periodontics": 6,
+    "Pedodontics": 4
+  }));
+  let tempImages = [];
+  let selectedTeeth = new Set();
+  let deferredPrompt = null;
+
+  document.getElementById("caseDate").valueAsDate = new Date();
+
+  // Register Service Worker for PWA
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./sw.js").catch(() => {});
+    });
+  }
+
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    document.getElementById("install-btn").classList.remove("hidden");
+  });
+
+  function installApp() {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(() => {
+      deferredPrompt = null;
+      document.getElementById("install-btn").classList.add("hidden");
+    });
+  }
+
+  function buildDentalChart() {
+    const renderRow = (rightArr, leftArr, containerId) => {
+      const el = document.getElementById(containerId);
+      const makeBtns = arr => arr.map(num =>
+        `<button type="button" class="tooth-btn ${selectedTeeth.has(String(num)) ? 'selected' : ''}" onclick="toggleTooth('${num}')">${num}</button>`
+      ).join("");
+      el.innerHTML = makeBtns(rightArr) + `<div class="quadrant-divider"></div>` + makeBtns(leftArr);
+    };
+    renderRow(UPPER_RIGHT, UPPER_LEFT, "upper-arch");
+    renderRow(LOWER_RIGHT, LOWER_LEFT, "lower-arch");
+  }
+
+  function toggleTooth(num) {
+    if (selectedTeeth.has(num)) {
+      selectedTeeth.delete(num);
+    } else {
+      selectedTeeth.add(num);
+    }
+    const list = Array.from(selectedTeeth).map(n => "#" + n).join(", ");
+    document.getElementById("toothNumber").value = list;
+    buildDentalChart();
+  }
+
+  function switchTab(tabId, btn) {
+    document.querySelectorAll("section").forEach(s => s.classList.add("hidden"));
+    document.getElementById("tab-" + tabId).classList.remove("hidden");
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    if (btn) btn.classList.add("active");
+    if (tabId === "dashboard") renderDashboard();
+    if (tabId === "cases-list") renderCases();
+  }
+
+  function toggleReqEditor() {
+    const editor = document.getElementById("req-editor");
+    editor.classList.toggle("hidden");
+    const container = document.getElementById("req-inputs");
+    container.innerHTML = DEPARTMENTS.map(dept => `
+      <div>
+        <label>${dept}</label>
+        <input type="number" min="0" id="req-${dept}" value="${requirements[dept] || 0}" />
+      </div>
+    `).join("");
+  }
+
+  function saveRequirements() {
+    DEPARTMENTS.forEach(dept => {
+      const val = parseInt(document.getElementById("req-" + dept).value, 10);
+      requirements[dept] = isNaN(val) ? 0 : val;
+    });
+    localStorage.setItem("dental_reqs_v2", JSON.stringify(requirements));
+    document.getElementById("req-editor").classList.add("hidden");
+    renderDashboard();
+  }
+
+  function renderDashboard() {
+    document.getElementById("total-count").textContent = cases.length;
+    const container = document.getElementById("req-cards");
+    container.innerHTML = DEPARTMENTS.map(dept => {
+      const deptCases = cases.filter(c => c.department === dept);
+      const done = deptCases.filter(c => c.status === "completed" || c.status === "signed").length;
+      const inProg = deptCases.filter(c => c.status === "progress").length;
+      const target = requirements[dept] || 0;
+      const pct = target > 0 ? Math.min(100, Math.round((done / target) * 100)) : (done > 0 ? 100 : 0);
+      return `
+        <div class="card" style="margin:0;">
+          <div style="display:flex; justify-content:space-between; font-weight:700;">
+            <span>${dept}</span>
+            <span>${done} / ${target}</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+          <div style="font-size:0.82rem; color:var(--muted); display:flex; justify-content:space-between;">
+            <span>نسبة الإنجاز: ${pct}%</span>
+            <span>قيد التنفيذ: ${inProg}</span>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function handleImageUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const stage = document.getElementById("img-stage").value;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = new Image();
+      img.onload = function() {
+        const canvas = document.createElement("canvas");
+        const maxW = 900;
+        const scale = Math.min(1, maxW / img.width);
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const compressed = canvas.toDataURL("image/jpeg", 0.75);
+        tempImages.push({ stage, data: compressed });
+        renderTempImages();
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+    event.target.value = "";
+  }
+
+  function renderTempImages() {
+    const grid = document.getElementById("form-images-preview");
+    grid.innerHTML = tempImages.map((img, idx) => `
+      <div class="img-box">
+        <img src="${img.data}" alt="${img.stage}" onclick="openImage('${img.data}')" />
+        <div style="padding:4px; display:flex; justify-content:space-between; align-items:center;">
+          <span>${img.stage}</span>
+          <button type="button" onclick="removeTempImage(${idx})" style="border:none; background:none; color:#dc2626; cursor:pointer; font-weight:bold;">✕</button>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  function removeTempImage(idx) {
+    tempImages.splice(idx, 1);
+    renderTempImages();
+  }
+
+  function openImage(src) {
+    document.getElementById("modal-img").src = src;
+    document.getElementById("img-modal").classList.add("open");
+  }
+
+  function saveCase(e) {
+    e.preventDefault();
+    const id = document.getElementById("case-id").value;
+    const caseObj = {
+      id: id || Date.now().toString(),
+      department: document.getElementById("department").value,
+      patientCode: document.getElementById("patientCode").value.trim(),
+      toothNumber: document.getElementById("toothNumber").value.trim(),
+      status: document.getElementById("status").value,
+      caseDate: document.getElementById("caseDate").value,
+      supervisor: document.getElementById("supervisor").value.trim(),
+      diagnosis: document.getElementById("diagnosis").value.trim(),
+      procedure: document.getElementById("procedure").value.trim(),
+      notes: document.getElementById("notes").value.trim(),
+      images: [...tempImages]
+    };
+
+    if (id) {
+      const index = cases.findIndex(c => c.id === id);
+      if (index > -1) cases[index] = caseObj;
+    } else {
+      cases.unshift(caseObj);
+    }
+
+    localStorage.setItem("dental_cases_v2", JSON.stringify(cases));
+    resetForm();
+    renderDashboard();
+    switchTab("cases-list", document.querySelectorAll(".tab-btn")[2]);
+  }
+
+  function resetForm() {
+    document.getElementById("case-form").reset();
+    document.getElementById("case-id").value = "";
+    document.getElementById("form-title").textContent = "تسجيل حالة جديدة";
+    document.getElementById("caseDate").valueAsDate = new Date();
+    tempImages = [];
+    selectedTeeth.clear();
+    buildDentalChart();
+    renderTempImages();
+  }
+
+  function editCase(id) {
+    const c = cases.find(item => item.id === id);
+    if (!c) return;
+    document.getElementById("case-id").value = c.id;
+    document.getElementById("department").value = c.department;
+    document.getElementById("patientCode").value = c.patientCode;
+    document.getElementById("toothNumber").value = c.toothNumber;
+    document.getElementById("status").value = c.status;
+    document.getElementById("caseDate").value = c.caseDate;
+    document.getElementById("supervisor").value = c.supervisor || "";
+    document.getElementById("diagnosis").value = c.diagnosis;
+    document.getElementById("procedure").value = c.procedure || "";
+    document.getElementById("notes").value = c.notes || "";
+    tempImages = c.images ? [...c.images] : [];
+    selectedTeeth.clear();
+    const matches = c.toothNumber.match(/\d{2}/g);
+    if (matches) matches.forEach(m => selectedTeeth.add(m));
+    buildDentalChart();
+    renderTempImages();
+    document.getElementById("form-title").textContent = "تعديل بيانات الحالة";
+    switchTab("add-case", document.querySelectorAll(".tab-btn")[1]);
+  }
+
+  function deleteCase(id) {
+    if (!confirm("هل أنت متأكد من حذف هذه الحالة؟")) return;
+    cases = cases.filter(c => c.id !== id);
+    localStorage.setItem("dental_cases_v2", JSON.stringify(cases));
+    renderDashboard();
+    renderCases();
+  }
+
+  function renderCases() {
+    const q = document.getElementById("search-input").value.toLowerCase();
+    const deptFilter = document.getElementById("filter-dept").value;
+    const statusFilter = document.getElementById("filter-status").value;
+
+    const filtered = cases.filter(c => {
+      const matchQ = !q ||
+        c.patientCode.toLowerCase().includes(q) ||
+        c.toothNumber.toLowerCase().includes(q) ||
+        c.diagnosis.toLowerCase().includes(q);
+      const matchDept = deptFilter === "ALL" || c.department === deptFilter;
+      const matchStatus = statusFilter === "ALL" || c.status === statusFilter;
+      return matchQ && matchDept && matchStatus;
+    });
+
+    const container = document.getElementById("cases-container");
+    if (filtered.length === 0) {
+      container.innerHTML = `<div class="card" style="text-align:center; color:var(--muted);">لا توجد حالات مطابقة حالياً.</div>`;
+      return;
+    }
+
+    const statusLabels = {
+      progress: `<span class="badge status-progress">قيد التنفيذ</span>`,
+      completed: `<span class="badge status-completed">مكتملة</span>`,
+      signed: `<span class="badge status-signed">معتمدة (Signed Off)</span>`
+    };
+
+    container.innerHTML = filtered.map(c => `
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px;">
+          <div>
+            <strong style="font-size:1.05rem;">${c.department} — ${c.toothNumber}</strong>
+            <span style="color:var(--muted); margin-right:8px;">(${c.patientCode})</span>
+            ${statusLabels[c.status] || ""}
+          </div>
+          <div style="font-size:0.84rem; color:var(--muted);">
+            ${c.caseDate || ""} ${c.supervisor ? `| إشراف: ${c.supervisor}` : ""}
+          </div>
+        </div>
+
+        <p style="margin:10px 0 6px;"><strong>التشخيص:</strong> ${c.diagnosis}</p>
+        ${c.procedure ? `<p style="margin:6px 0;"><strong>خطوات العمل:</strong> ${c.procedure}</p>` : ""}
+        ${c.notes ? `<p style="margin:6px 0; color:var(--muted);"><strong>ملاحظات:</strong> ${c.notes}</p>` : ""}
+
+        ${c.images && c.images.length ? `
+          <div class="img-preview-grid">
+            ${c.images.map(img => `
+              <div class="img-box">
+                <img src="${img.data}" alt="${img.stage}" onclick="openImage('${img.data}')" />
+                <div style="padding:3px;">${img.stage}</div>
+              </div>
+            `).join("")}
+          </div>
+        ` : ""}
+
+        <div class="no-print" style="display:flex; gap:8px; margin-top:12px; border-top:1px solid var(--border); padding-top:10px; flex-wrap:wrap;">
+          <button class="btn btn-outline" onclick="editCase('${c.id}')">✏️ تعديل</button>
+          <button class="btn btn-outline" onclick="window.print()">🖨️ طباعة / PDF</button>
+          <button class="btn btn-danger" onclick="deleteCase('${c.id}')">🗑️ حذف</button>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  function exportBackup() {
+    const data = JSON.stringify({ cases, requirements }, null, 2);
+    const blob = new Blob([data], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `dental-cases-backup-${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function importBackup(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const parsed = JSON.parse(e.target.result);
+        if (parsed.cases) cases = parsed.cases;
+        if (parsed.requirements) requirements = parsed.requirements;
+        localStorage.setItem("dental_cases_v2", JSON.stringify(cases));
+        localStorage.setItem("dental_reqs_v2", JSON.stringify(requirements));
+        renderDashboard();
+        renderCases();
+        alert("تمت استعادة البيانات بنجاح!");
+      } catch (err) {
+        alert("ملف النسخة الاحتياطية غير صالح.");
+      }
+    };
+    reader.readAsText(file);
+    event.target.value = "";
+  }
+
+  buildDentalChart();
+  renderDashboard();
+</script>
+</body>
+</html>
